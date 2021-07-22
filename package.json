@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "hardhat node --network hardhat --watch --export-all tmp/contracts/manifest.json",
     "console": "hardhat console",
-    "fork": "hardhat node --fork https://mainnet.infura.io/v3/f4b7c65997354c3783277ae1644ebdfd",
+    "fork": "hardhat node  --network hardhat --fork https://mainnet.infura.io/v3/f4b7c65997354c3783277ae1644ebdfd",
     "test": "hardhat test --network hardhat",
     "compile": "hardhat compile",
     "local:deploy": "hardhat --network localhost deploy --export-all tmp/contracts/manifest.json",
