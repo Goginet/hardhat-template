@@ -1,0 +1,3 @@
+[submodule "compound-protocol"]
+	path = compound-protocol
+	url = git@github.com:UnFederalReserve/compound-protocol.git

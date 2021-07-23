@@ -1,56 +1,92 @@
-// import fs from 'fs'
-import 'dotenv/config'
-import { HardhatUserConfig } from 'hardhat/types'
-import 'hardhat-deploy'
-import 'hardhat-deploy-ethers'
-import tasks from './tasks'
+/**
+ * Use:
+ *
+ * npx hardhat node                                   # run node with fork
+ *
+ * npx hardhat --network localhost faucet <address>   # add some ETH, after need
+ *                                                      reset account settings in MetaMask
+ * npx hardhat --network localhost balance <address>  # view balance
+ *
+ * In MetaMask add http://127.0.0.1:8545 RPC url and reset account settings
+ */
 
-// Load tasks
-for (const tsk of tasks) { tsk() }
+/* global network, task */
+/* eslint-disable prettier/prettier */
 
-let mnemonic = process.env.MNEMONIC
-if (!mnemonic) {
-  // FOR DEV ONLY, SET IT IN .env files if you want to keep it private
-  // (IT IS IMPORTANT TO HAVE A NON RANDOM MNEMONIC SO THAT SCRIPTS CAN ACT ON THE SAME ACCOUNTS)
-  mnemonic = 'test test test test test test test test test test test junk'
+const dotenv = require('dotenv');
+const dotenvExpand = require("dotenv-expand");
+const { utils } = require('ethers');
+
+const environment = dotenv.config()
+dotenvExpand(environment)
+
+const {
+  ALCHEMY_API_KEY_MAINNET,
+  VUE_APP_CHAIN_ID_PRIVATE_MAINNET,
+} = environment.parsed
+
+
+const floatFormatter = (value, compact = false) => {
+  const notation = compact ? 'compact' : void 0
+  return new Intl
+    .NumberFormat('ru-RU', { notation })
+    .format(+value)
 }
 
-const config: HardhatUserConfig = {
+task("faucet", "Sends ETH to an address")
+  .addPositionalParam("address", "The address that will receive them")
+  .setAction(async ({ address }) => {
+    const balance = utils.parseEther(1e6.toString())
+    const balance_eth = balance.div(1e9).div(1e9)
+
+    await network.provider.send(
+      "hardhat_setBalance",
+      [address, balance.toHexString()],
+    );
+
+    console.log(`Transferred ${floatFormatter(balance_eth)} ETH to ${address}`);
+  });
+
+
+task("balance", "Get balance ETH of address")
+  .addPositionalParam("address", "The address that will receive them")
+  .setAction(async ({ address }) => {
+    const balance = await network.provider.send(
+      "eth_getBalance",
+      [address],
+    );
+
+    const balance_eth = balance / 1e9 / 1e9
+    console.log(`Balance is ${floatFormatter(balance_eth)} ETH of ${address}`);
+  });
+
+
+const config = {
   solidity: "0.7.3",
-  defaultNetwork: 'localhost',
+  defaultNetwork: "hardhat",
   networks: {
-    localhost: {
-      url: "http://localhost:8545",
+    hardhat: {
+      // fix MetaMask - https://hardhat.org/metamask-issue.html
+      chainId: +VUE_APP_CHAIN_ID_PRIVATE_MAINNET,
+      accounts: {
+        count: 1,
+        accountsBalance: utils.parseEther('100001.0').toString(),
+      },
+      // https://hardhat.org/config/#hardhat-network
       /*
-        notice no mnemonic here? it will just use account 0 of the hardhat node to deploy
-        (you can put in a mnemonic here to set the deployer locally)
+      accounts: [
+        'ba8c9ff38e4179748925335a9891b969214b37dc3723a1754b8b849d3eea9ac0',
+      ].map((privateKey) => ({
+        privateKey,
+        balance: utils.parseEther(1e6.toString()).toString(),
+      })),
       */
-    },
-    rinkeby: {
-      url: `https://rinkeby.infura.io/v3/${process.env.INFURA_TOKEN}`,
-      accounts: { mnemonic }
-    },
-    mainnet: {
-      url: `https://mainnet.infura.io/v3/${process.env.INFURA_TOKEN}`,
-      accounts: { mnemonic }
-    },
-    ropsten: {
-      url: `https://ropsten.infura.io/v3/${process.env.INFURA_TOKEN}`,
-      accounts: { mnemonic }
-    },
-    goerli: {
-      url: `https://goerli.infura.io/v3/${process.env.INFURA_TOKEN}`,
-      accounts: { mnemonic }
-    },
-    xdai: {
-      url: 'https://dai.poa.network',
-      chainId: 100,
-      gas: 500000,
-      gasPrice: 1000000000,
-      accounts: { mnemonic }
+      forking: {
+        url: `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_API_KEY_MAINNET}`,
+        blockNumber: 12831680
+      }
     }
   }
-}
+};
 
-export default config
-
+module.exports = config;
