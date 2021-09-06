@@ -60,6 +60,32 @@ task("balance", "Get balance ETH of address")
     console.log(`Balance is ${floatFormatter(balance_eth)} ETH of ${address}`);
   });
 
+task("getAdmin", "returns admin of the unitroller", async () => {
+  const addr = await network.provider.request(
+    {
+      method: "eth_getStorageAt",
+      params: [
+        "0x3105D328c66d8d55092358cF595d54608178E9B5",
+        "0x0",
+      ]
+    }
+  );
+
+  console.log(`current admin: ${addr}`);
+});
+
+task("setAdmin", "sets admin of the unitroller").addPositionalParam("address", "The address of the new admin").setAction(async ({ address }) => {
+  await network.provider.request(
+    {
+      method: "hardhat_setStorageAt",
+      params: [
+        "0x3105D328c66d8d55092358cF595d54608178E9B5",
+        "0x0",
+        utils.hexZeroPad(address, 32),
+      ]
+    }
+  );
+});
 
 const config = {
   solidity: "0.7.3",
