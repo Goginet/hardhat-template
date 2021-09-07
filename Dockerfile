@@ -1,10 +1,9 @@
-FROM node:14
+FROM node:16
 
 ENV APP_ROOT /app
 
 ADD ./run.sh /
 ADD . ${APP_ROOT}
-ADD ./compound-protocol/contracts ${APP_ROOT}/contracts
 
 WORKDIR ${APP_ROOT}
 
