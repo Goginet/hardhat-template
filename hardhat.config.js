@@ -15,7 +15,9 @@
 
 const dotenv = require('dotenv');
 const dotenvExpand = require("dotenv-expand");
-const { utils } = require('ethers');
+const { utils, BigNumber } = require('ethers');
+
+require("@nomiclabs/hardhat-ethers");
 
 const environment = dotenv.config()
 dotenvExpand(environment)
@@ -72,6 +74,43 @@ task("getAdmin", "returns admin of the unitroller", async () => {
   );
 
   console.log(`current admin: ${addr}`);
+});
+
+task("getCollateralFactor", "returns collateral factor for the token").addPositionalParam("token", "The address of the token").setAction(async (args) => {
+  const data = await network.provider.request(
+    {
+      method: "eth_call",
+      params: [
+        {
+          "to": "0x3105D328c66d8d55092358cF595d54608178E9B5",
+          "data": "0x8e8f294b" + utils.hexZeroPad(args.token, 32).substr(2),
+        },
+        "latest"
+      ]
+    }
+  );
+
+  console.log(BigNumber.from("0x" + data.substr(67, 63)).div(BigNumber.from(10).pow(16)).toString());
+});
+
+task("setCollateralFactor", "sets collateral factor for the specified token").addPositionalParam("token", "The address of the token").addPositionalParam("factor", "collateral factor").setAction(async ({ token, factor }) => {
+  await hre.network.provider.request({
+    method: "hardhat_impersonateAccount",
+    params: ["0x350Ef1c0342Ac8D8649982960Ee31bfd75A35dC7"],
+  });
+  await network.provider.send("hardhat_setBalance", [
+    "0x350Ef1c0342Ac8D8649982960Ee31bfd75A35dC7",
+    "0x3635c9adc5dea00000",
+  ]);
+
+  const signer = await ethers.provider.getSigner("0x350Ef1c0342Ac8D8649982960Ee31bfd75A35dC7");
+
+  const collateralFactor = utils.hexZeroPad(BigNumber.from(factor).mul(BigNumber.from(10).pow(16)).toHexString(), 32).substr(2);
+
+  await signer.sendTransaction({
+    to: "0x3105D328c66d8d55092358cF595d54608178E9B5",
+    data: "0xe4028eee" + utils.hexZeroPad(token, 32).substr(2) + collateralFactor,
+  });
 });
 
 task("setAdmin", "sets admin of the unitroller").addPositionalParam("address", "The address of the new admin").setAction(async ({ address }) => {
