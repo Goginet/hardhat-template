@@ -1,0 +1,65 @@
+substitutions:
+  _SERVICE_NAME: hardhat-mainnet-fork
+timeout: 2h
+steps:
+
+# init environment
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: init-env
+  waitFor: ['-']
+  entrypoint: 'sh'
+  args:
+    - '-c'
+    - |
+      echo > .cloudbuild.env.sh
+      if [ "$BRANCH_NAME" = "master" ]; then
+        echo "export NAMESPACE=$BRANCH_NAME" >> .cloudbuild.env.sh
+        echo 'export CLUSTER_NAME=master' >> .cloudbuild.env.sh
+        echo 'export DEPLOY_TIMEOUT=60m' >> .cloudbuild.env.sh
+        echo "export DOMAIN_NAME=lending-blockchain-api.unfederalreserve.com" >> .cloudbuild.env.sh
+      fi
+      if [ "$BRANCH_NAME" = "dev" -o "$BRANCH_NAME" = "stage" ]; then
+        echo "export NAMESPACE=$BRANCH_NAME" >> .cloudbuild.env.sh
+        echo 'export CLUSTER_NAME=dev' >> .cloudbuild.env.sh
+        echo 'export DEPLOY_TIMEOUT=10m' >> .cloudbuild.env.sh
+        echo "export DOMAIN_NAME=lending-blockchain-api-$BRANCH_NAME.unfederalreservetesting.com" >> .cloudbuild.env.sh
+      fi
+
+# build docker image
+- name: 'gcr.io/cloud-builders/docker'
+  id: build-docker
+  waitFor: ['init-env']
+  entrypoint: 'sh'
+  args:
+    - '-c'
+    - |
+      . ./.cloudbuild.env.sh
+
+      docker build --build-arg "VERSION=$SHORT_SHA" --build-arg "DOMAIN_NAME=$$DOMAIN_NAME" -t 'gcr.io/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA' -t 'gcr.io/$PROJECT_ID/$_SERVICE_NAME:latest' .
+      docker push 'gcr.io/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
+      docker push 'gcr.io/$PROJECT_ID/$_SERVICE_NAME:latest'
+
+# deploy
+- name: 'gcr.io/cloud-builders/gke-deploy'
+  id: deploy
+  waitFor:
+    - build-docker
+  entrypoint: 'sh'
+  args:
+      - '-c'
+      - |
+        . ./.cloudbuild.env.sh
+        if [ "$$CLUSTER_NAME" = "" ]; then
+          echo "Not deploying on branch $BRANCH_NAME"
+          exit;
+        fi
+
+        gcloud --quiet container clusters get-credentials --region us-central1-c $$CLUSTER_NAME
+
+        kubectl -n $$NAMESPACE get deployment/$_SERVICE_NAME -o yaml | gke-deploy run --timeout $$DEPLOY_TIMEOUT -f - -i gcr.io/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA -a $_SERVICE_NAME
+
+        if [[ $? != 0 ]]; then
+           kubectl -n $$NAMESPACE rollout undo deployments/$_SERVICE_NAME
+
+           exit 1
+        fi
