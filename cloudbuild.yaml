@@ -12,18 +12,9 @@ steps:
     - '-c'
     - |
       echo > .cloudbuild.env.sh
-      if [ "$BRANCH_NAME" = "master" ]; then
-        echo "export NAMESPACE=$BRANCH_NAME" >> .cloudbuild.env.sh
-        echo 'export CLUSTER_NAME=master' >> .cloudbuild.env.sh
-        echo 'export DEPLOY_TIMEOUT=60m' >> .cloudbuild.env.sh
-        echo "export DOMAIN_NAME=lending-blockchain-api.unfederalreserve.com" >> .cloudbuild.env.sh
-      fi
-      if [ "$BRANCH_NAME" = "dev" -o "$BRANCH_NAME" = "stage" ]; then
-        echo "export NAMESPACE=$BRANCH_NAME" >> .cloudbuild.env.sh
-        echo 'export CLUSTER_NAME=dev' >> .cloudbuild.env.sh
-        echo 'export DEPLOY_TIMEOUT=10m' >> .cloudbuild.env.sh
-        echo "export DOMAIN_NAME=lending-blockchain-api-$BRANCH_NAME.unfederalreservetesting.com" >> .cloudbuild.env.sh
-      fi
+      echo "export NAMESPACE=dev" >> .cloudbuild.env.sh
+      echo 'export CLUSTER_NAME=dev' >> .cloudbuild.env.sh
+      echo 'export DEPLOY_TIMEOUT=10m' >> .cloudbuild.env.sh
 
 # build docker image
 - name: 'gcr.io/cloud-builders/docker'
