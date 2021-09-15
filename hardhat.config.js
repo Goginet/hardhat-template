@@ -137,18 +137,8 @@ const config = {
         count: 1,
         accountsBalance: utils.parseEther('100001.0').toString(),
       },
-      // https://hardhat.org/config/#hardhat-network
-      /*
-      accounts: [
-        'ba8c9ff38e4179748925335a9891b969214b37dc3723a1754b8b849d3eea9ac0',
-      ].map((privateKey) => ({
-        privateKey,
-        balance: utils.parseEther(1e6.toString()).toString(),
-      })),
-      */
       forking: {
         url: `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_API_KEY_MAINNET}`,
-        blockNumber: 12831680
       }
     }
   }
