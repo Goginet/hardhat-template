@@ -6,7 +6,7 @@ function afterRun()
 
     npx hardhat --network localhost getAdmin
 
-    npx hardhat --network  localhost setAdmin 0x0000f0160150d0008a300bf076D02030186B06A2
+    npx hardhat --network  localhost setAdmin 0x350Ef1c0342Ac8D8649982960Ee31bfd75A35dC7
 
     npx hardhat --network localhost getAdmin
 }
