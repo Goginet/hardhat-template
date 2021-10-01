@@ -93,6 +93,40 @@ task("getCollateralFactor", "returns collateral factor for the token").addPositi
   console.log(BigNumber.from("0x" + data.substr(67, 63)).div(BigNumber.from(10).pow(16)).toString());
 });
 
+task("getMintPaused", "returns MintPaused for the token").addPositionalParam("token", "The address of the token").setAction(async (args) => {
+  const data = await network.provider.request(
+    {
+      method: "eth_call",
+      params: [
+        {
+          "to": "0x3105D328c66d8d55092358cF595d54608178E9B5",
+          "data": "0x731f0c2b" + utils.hexZeroPad(args.token, 32).substr(2),
+        },
+        "latest"
+      ]
+    }
+  );
+
+  console.log(`current MintPaused: ${data}`);
+});
+
+task("getBorrowPaused", "returns BorrowPaused for the token").addPositionalParam("token", "The address of the token").setAction(async (args) => {
+  const data = await network.provider.request(
+    {
+      method: "eth_call",
+      params: [
+        {
+          "to": "0x3105D328c66d8d55092358cF595d54608178E9B5",
+          "data": "0x6d154ea5" + utils.hexZeroPad(args.token, 32).substr(2),
+        },
+        "latest"
+      ]
+    }
+  );
+
+  console.log(`current BorrowPaused: ${data}`);
+});
+
 task("setCollateralFactor", "sets collateral factor for the specified token").addPositionalParam("token", "The address of the token").addPositionalParam("factor", "collateral factor").setAction(async ({ token, factor }) => {
   await hre.network.provider.request({
     method: "hardhat_impersonateAccount",
@@ -110,6 +144,46 @@ task("setCollateralFactor", "sets collateral factor for the specified token").ad
   await signer.sendTransaction({
     to: "0x3105D328c66d8d55092358cF595d54608178E9B5",
     data: "0xe4028eee" + utils.hexZeroPad(token, 32).substr(2) + collateralFactor,
+  });
+});
+
+task("setMintPaused", "set Mint Paused for token").addPositionalParam("token", "The address of the token").addPositionalParam("value", "bool value").setAction(async ({ token, value }) => {
+  await hre.network.provider.request({
+    method: "hardhat_impersonateAccount",
+    params: ["0x350Ef1c0342Ac8D8649982960Ee31bfd75A35dC7"],
+  });
+  await network.provider.send("hardhat_setBalance", [
+    "0x350Ef1c0342Ac8D8649982960Ee31bfd75A35dC7",
+    "0x3635c9adc5dea00000",
+  ]);
+
+  const signer = await ethers.provider.getSigner("0x350Ef1c0342Ac8D8649982960Ee31bfd75A35dC7");
+
+  const mintPausedValue = utils.hexZeroPad(BigNumber.from(value).mul(BigNumber.from(10).pow(16)).toHexString(), 32).substr(2);
+
+  await signer.sendTransaction({
+    to: "0x3105D328c66d8d55092358cF595d54608178E9B5",
+    data: "0x3bcf7ec1" + utils.hexZeroPad(token, 32).substr(2) + mintPausedValue,
+  });
+});
+
+task("setBorrowPaused", "set Borrow Paused for token").addPositionalParam("token", "The address of the token").addPositionalParam("value", "bool value").setAction(async ({ token, value }) => {
+  await hre.network.provider.request({
+    method: "hardhat_impersonateAccount",
+    params: ["0x350Ef1c0342Ac8D8649982960Ee31bfd75A35dC7"],
+  });
+  await network.provider.send("hardhat_setBalance", [
+    "0x350Ef1c0342Ac8D8649982960Ee31bfd75A35dC7",
+    "0x3635c9adc5dea00000",
+  ]);
+
+  const signer = await ethers.provider.getSigner("0x350Ef1c0342Ac8D8649982960Ee31bfd75A35dC7");
+
+  const borrowPausedValue = utils.hexZeroPad(BigNumber.from(value).mul(BigNumber.from(10).pow(16)).toHexString(), 32).substr(2);
+
+  await signer.sendTransaction({
+    to: "0x3105D328c66d8d55092358cF595d54608178E9B5",
+    data: "0x18c882a5" + utils.hexZeroPad(token, 32).substr(2) + borrowPausedValue,
   });
 });
 
