@@ -76,6 +76,20 @@ task("getAdmin", "returns admin of the unitroller", async () => {
   console.log(`current admin: ${addr}`);
 });
 
+task("getERSDLAdmin", "returns admin of the ersdl", async () => {
+  const addr = await network.provider.request(
+    {
+      method: "eth_getStorageAt",
+      params: [
+        "0xE4cC5A22B39fFB0A56d67F94f9300db20D786a5F",
+        "0x0",
+      ]
+    }
+  );
+
+  console.log(`current admin: ${addr}`);
+});
+
 task("getCollateralFactor", "returns collateral factor for the token").addPositionalParam("token", "The address of the token").setAction(async (args) => {
   const data = await network.provider.request(
     {
@@ -232,6 +246,19 @@ task("setAdmin", "sets admin of the unitroller").addPositionalParam("address", "
       method: "hardhat_setStorageAt",
       params: [
         "0x3105D328c66d8d55092358cF595d54608178E9B5",
+        "0x0",
+        utils.hexZeroPad(address, 32),
+      ]
+    }
+  );
+});
+
+task("setERSDLAdmin", "sets admin of the unitroller").addPositionalParam("address", "The address of the new admin").setAction(async ({ address }) => {
+  await network.provider.request(
+    {
+      method: "hardhat_setStorageAt",
+      params: [
+        "0xE4cC5A22B39fFB0A56d67F94f9300db20D786a5F",
         "0x0",
         utils.hexZeroPad(address, 32),
       ]
