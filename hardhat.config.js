@@ -76,6 +76,20 @@ task("getAdmin", "returns admin of the unitroller", async () => {
   console.log(`current admin: ${addr}`);
 });
 
+task("getERSDLAdmin", "returns admin of the ersdl", async () => {
+  const addr = await network.provider.request(
+    {
+      method: "eth_getStorageAt",
+      params: [
+        "0xE4cC5A22B39fFB0A56d67F94f9300db20D786a5F",
+        "0x0",
+      ]
+    }
+  );
+
+  console.log(`current admin: ${addr}`);
+});
+
 task("getCollateralFactor", "returns collateral factor for the token").addPositionalParam("token", "The address of the token").setAction(async (args) => {
   const data = await network.provider.request(
     {
@@ -91,6 +105,57 @@ task("getCollateralFactor", "returns collateral factor for the token").addPositi
   );
 
   console.log(BigNumber.from("0x" + data.substr(67, 63)).div(BigNumber.from(10).pow(16)).toString());
+});
+
+task("getMintPaused", "returns MintPaused for the token").addPositionalParam("token", "The address of the token").setAction(async (args) => {
+  const data = await network.provider.request(
+    {
+      method: "eth_call",
+      params: [
+        {
+          "to": "0x3105D328c66d8d55092358cF595d54608178E9B5",
+          "data": "0x731f0c2b" + utils.hexZeroPad(args.token, 32).substr(2),
+        },
+        "latest"
+      ]
+    }
+  );
+
+  console.log(`current MintPaused: ${data}`);
+});
+
+task("getReserveFactor", "get reserveFactor for the token").setAction(async () => {
+  const data = await network.provider.request(
+    {
+      method: "eth_call",
+      params: [
+        {
+          "to": "0xE4cC5A22B39fFB0A56d67F94f9300db20D786a5F",
+          "data": "0x173b9904",
+        },
+        "latest"
+      ]
+    }
+  );
+  const res = data / 1e0
+  console.log(`current MintPaused: ${res}`);
+});
+
+task("getBorrowPaused", "returns BorrowPaused for the token").addPositionalParam("token", "The address of the token").setAction(async (args) => {
+  const data = await network.provider.request(
+    {
+      method: "eth_call",
+      params: [
+        {
+          "to": "0x3105D328c66d8d55092358cF595d54608178E9B5",
+          "data": "0x6d154ea5" + utils.hexZeroPad(args.token, 32).substr(2),
+        },
+        "latest"
+      ]
+    }
+  );
+
+  console.log(`current BorrowPaused: ${data}`);
 });
 
 task("setCollateralFactor", "sets collateral factor for the specified token").addPositionalParam("token", "The address of the token").addPositionalParam("factor", "collateral factor").setAction(async ({ token, factor }) => {
@@ -113,12 +178,87 @@ task("setCollateralFactor", "sets collateral factor for the specified token").ad
   });
 });
 
+task("setReserveFactor", "sets reserveFactor for ERSDL").addPositionalParam("value", "collateral factor").setAction(async ({ value }) => {
+  await hre.network.provider.request({
+    method: "hardhat_impersonateAccount",
+    params: ["0x350Ef1c0342Ac8D8649982960Ee31bfd75A35dC7"],
+  });
+  await network.provider.send("hardhat_setBalance", [
+    "0x350Ef1c0342Ac8D8649982960Ee31bfd75A35dC7",
+    "0x3635c9adc5dea00000",
+  ]);
+
+  const signer = await ethers.provider.getSigner("0x350Ef1c0342Ac8D8649982960Ee31bfd75A35dC7");
+
+  const newReserveFactor = utils.hexZeroPad(BigNumber.from(value).mul(BigNumber.from(10).pow(16)).toHexString(), 32).substr(2);
+
+  await signer.sendTransaction({
+    to: "0xE4cC5A22B39fFB0A56d67F94f9300db20D786a5F",
+    data: "0xfca7820b" + newReserveFactor,
+  });
+
+  console.log(`newReserveFactor: ${newReserveFactor}`);
+});
+
+task("setMintPaused", "set Mint Paused for token").addPositionalParam("token", "The address of the token").addPositionalParam("value", "bool value").setAction(async ({ token, value }) => {
+  await hre.network.provider.request({
+    method: "hardhat_impersonateAccount",
+    params: ["0x350Ef1c0342Ac8D8649982960Ee31bfd75A35dC7"],
+  });
+  await network.provider.send("hardhat_setBalance", [
+    "0x350Ef1c0342Ac8D8649982960Ee31bfd75A35dC7",
+    "0x3635c9adc5dea00000",
+  ]);
+
+  const signer = await ethers.provider.getSigner("0x350Ef1c0342Ac8D8649982960Ee31bfd75A35dC7");
+
+  const mintPausedValue = utils.hexZeroPad(BigNumber.from(value).mul(BigNumber.from(10).pow(16)).toHexString(), 32).substr(2);
+
+  await signer.sendTransaction({
+    to: "0x3105D328c66d8d55092358cF595d54608178E9B5",
+    data: "0x3bcf7ec1" + utils.hexZeroPad(token, 32).substr(2) + mintPausedValue,
+  });
+});
+
+task("setBorrowPaused", "set Borrow Paused for token").addPositionalParam("token", "The address of the token").addPositionalParam("value", "bool value").setAction(async ({ token, value }) => {
+  await hre.network.provider.request({
+    method: "hardhat_impersonateAccount",
+    params: ["0x350Ef1c0342Ac8D8649982960Ee31bfd75A35dC7"],
+  });
+  await network.provider.send("hardhat_setBalance", [
+    "0x350Ef1c0342Ac8D8649982960Ee31bfd75A35dC7",
+    "0x3635c9adc5dea00000",
+  ]);
+
+  const signer = await ethers.provider.getSigner("0x350Ef1c0342Ac8D8649982960Ee31bfd75A35dC7");
+
+  const borrowPausedValue = utils.hexZeroPad(BigNumber.from(value).mul(BigNumber.from(10).pow(16)).toHexString(), 32).substr(2);
+
+  await signer.sendTransaction({
+    to: "0x3105D328c66d8d55092358cF595d54608178E9B5",
+    data: "0x18c882a5" + utils.hexZeroPad(token, 32).substr(2) + borrowPausedValue,
+  });
+});
+
 task("setAdmin", "sets admin of the unitroller").addPositionalParam("address", "The address of the new admin").setAction(async ({ address }) => {
   await network.provider.request(
     {
       method: "hardhat_setStorageAt",
       params: [
         "0x3105D328c66d8d55092358cF595d54608178E9B5",
+        "0x0",
+        utils.hexZeroPad(address, 32),
+      ]
+    }
+  );
+});
+
+task("setERSDLAdmin", "sets admin of the unitroller").addPositionalParam("address", "The address of the new admin").setAction(async ({ address }) => {
+  await network.provider.request(
+    {
+      method: "hardhat_setStorageAt",
+      params: [
+        "0xE4cC5A22B39fFB0A56d67F94f9300db20D786a5F",
         "0x0",
         utils.hexZeroPad(address, 32),
       ]
