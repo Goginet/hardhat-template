@@ -260,7 +260,7 @@ task("setERSDLAdmin", "sets admin of the unitroller").addPositionalParam("addres
       params: [
         "0xE4cC5A22B39fFB0A56d67F94f9300db20D786a5F",
         "0x3",
-        utils.hexZeroPad(address, 32),
+        utils.hexZeroPad(address, 31) + "08",
       ]
     }
   );
