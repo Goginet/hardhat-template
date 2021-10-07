@@ -82,7 +82,7 @@ task("getERSDLAdmin", "returns admin of the ersdl", async () => {
       method: "eth_getStorageAt",
       params: [
         "0xE4cC5A22B39fFB0A56d67F94f9300db20D786a5F",
-        "0x0",
+        "0x3",
       ]
     }
   );
@@ -138,7 +138,7 @@ task("getReserveFactor", "get reserveFactor for the token").setAction(async () =
     }
   );
   const res = data / 1e0
-  console.log(`current MintPaused: ${res}`);
+  console.log(`current ReserveFactor: ${res}`);
 });
 
 task("getBorrowPaused", "returns BorrowPaused for the token").addPositionalParam("token", "The address of the token").setAction(async (args) => {
@@ -259,7 +259,7 @@ task("setERSDLAdmin", "sets admin of the unitroller").addPositionalParam("addres
       method: "hardhat_setStorageAt",
       params: [
         "0xE4cC5A22B39fFB0A56d67F94f9300db20D786a5F",
-        "0x0",
+        "0x3",
         utils.hexZeroPad(address, 32),
       ]
     }
