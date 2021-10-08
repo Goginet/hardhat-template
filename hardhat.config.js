@@ -120,8 +120,8 @@ task("getMintPaused", "returns MintPaused for the token").addPositionalParam("to
       ]
     }
   );
-
-  console.log(`current MintPaused: ${data}`);
+  const res = data / 1e0
+  console.log(`current MintPaused: ${res}`);
 });
 
 task("getReserveFactor", "get reserveFactor for the token").setAction(async () => {
@@ -154,8 +154,8 @@ task("getBorrowPaused", "returns BorrowPaused for the token").addPositionalParam
       ]
     }
   );
-
-  console.log(`current BorrowPaused: ${data}`);
+  const res = data / 1e0
+  console.log(`current BorrowPaused: ${res}`);
 });
 
 task("setCollateralFactor", "sets collateral factor for the specified token").addPositionalParam("token", "The address of the token").addPositionalParam("factor", "collateral factor").setAction(async ({ token, factor }) => {
