@@ -197,7 +197,7 @@ task("setReserveFactor", "sets reserveFactor for ERSDL").addPositionalParam("val
     data: "0xfca7820b" + newReserveFactor,
   });
 
-  console.log(`newReserveFactor: ${newReserveFactor}`);
+  console.log("ReserveFactor changed successfully");
 });
 
 task("setMintPaused", "set Mint Paused for token").addPositionalParam("token", "The address of the token").addPositionalParam("value", "bool value").setAction(async ({ token, value }) => {
@@ -218,6 +218,8 @@ task("setMintPaused", "set Mint Paused for token").addPositionalParam("token", "
     to: "0x3105D328c66d8d55092358cF595d54608178E9B5",
     data: "0x3bcf7ec1" + utils.hexZeroPad(token, 32).substr(2) + mintPausedValue,
   });
+
+  console.log("MintPaused changed successfully");
 });
 
 task("setBorrowPaused", "set Borrow Paused for token").addPositionalParam("token", "The address of the token").addPositionalParam("value", "bool value").setAction(async ({ token, value }) => {
@@ -238,6 +240,8 @@ task("setBorrowPaused", "set Borrow Paused for token").addPositionalParam("token
     to: "0x3105D328c66d8d55092358cF595d54608178E9B5",
     data: "0x18c882a5" + utils.hexZeroPad(token, 32).substr(2) + borrowPausedValue,
   });
+
+  console.log("BorrowPaused changed successfully");
 });
 
 task("setAdmin", "sets admin of the unitroller").addPositionalParam("address", "The address of the new admin").setAction(async ({ address }) => {
