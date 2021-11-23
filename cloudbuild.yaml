@@ -16,25 +16,33 @@ steps:
       echo 'export CLUSTER_NAME=dev' >> .cloudbuild.env.sh
       echo 'export DEPLOY_TIMEOUT=10m' >> .cloudbuild.env.sh
 
+
+
 # build docker image
-- name: 'gcr.io/cloud-builders/docker'
+- name: 'gcr.io/kaniko-project/executor'
   id: build-docker
   waitFor: ['init-env']
-  entrypoint: 'sh'
   args:
-    - '-c'
-    - |
-      . ./.cloudbuild.env.sh
+    - --build-arg CONFIG=hardhat-mainnet.config.js
+    - --destination=gcr.io/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA
+    - --destination=gcr.io/$PROJECT_ID/$_SERVICE_NAME:latest
+    - --cache=true
 
-      docker build --build-arg "VERSION=$SHORT_SHA" --build-arg "DOMAIN_NAME=$$DOMAIN_NAME" -t 'gcr.io/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA' -t 'gcr.io/$PROJECT_ID/$_SERVICE_NAME:latest' .
-      docker push 'gcr.io/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA'
-      docker push 'gcr.io/$PROJECT_ID/$_SERVICE_NAME:latest'
+# build docker image
+- name: 'gcr.io/kaniko-project/executor'
+  id: build-docker-compose
+  waitFor: ['init-env']
+  args:
+    - --build-arg CONFIG=hardhat-empty.config.js
+    - --destination=gcr.io/$PROJECT_ID/hardhat-network:latest
+    - --cache=true
 
 # deploy
 - name: 'gcr.io/cloud-builders/gke-deploy'
   id: deploy
   waitFor:
     - build-docker
+    - build-docker-compose
   entrypoint: 'sh'
   args:
       - '-c'
