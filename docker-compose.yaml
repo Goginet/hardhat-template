@@ -1,0 +1,80 @@
+version: "3.8"
+
+services:
+  hardhat:
+    image: gcr.io/unfederalreserve-dev/hardhat-network:latest
+    build: .
+    ports:
+      - "8545:8545"
+    command: ["npx", "hardhat", "node"]
+    networks:
+      - internal
+    deploy:
+      replicas: 1
+
+  init_network:
+    image: gcr.io/unfederalreserve-dev/ledger-server-api:latest
+    build: ../ledger-server-api
+    command: ["sh", "-c", "sleep 10 && /deployer --state-file /state/dev-template.json"]
+    depends_on:
+      - hardhat
+    networks:
+      - internal
+    environment:
+      PRIVATE_KEY: 21bfd4c5dfc54c8e68748d20ad35858cf99b18a8d57bb34b273646b21f0db0e8
+      ETHEREUM_NODE: http://hardhat:8545
+      NETWORK_ID: 1337
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 100
+
+  backend:
+    image: gcr.io/unfederalreserve-dev/lending-server-listener:latest
+    build: ../lending-server-listener
+    depends_on:
+      - init_network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: always
+        delay: 10s
+    ports:
+      - "8085:8085"
+    networks:
+      - internal
+    command: ["sh", "-c", "ping -c1 init_network || /app"]
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8085
+      COMPTROLLER_ADDRESS: "0xc44Cb112c79266e4C3948561f0B09F1022A8627C"
+      ERSDL_MAINNET_TOKEN_ADDRESS: "0x5218E472cFCFE0b64A064F055B43b4cdC9EfD3A6"
+      ERSDL_TOKEN_ADDRESS: "0xCcd42F2B944A35B63F526Bb322b41Db0487A81e6"
+      ETHEREUM_NODE: "http://hardhat:8545"
+      ETHEREUM_WS_NODE: "ws://hardhat:8545"
+      LENS_ADDRESS: "0x342b7eE55169f0F21bdf83B24097d5FDf721a2bB"
+      LIQUIDITY_LENS_ADDRESS: "0x5f0cd5025333f1b87cb9116a2336f369135224bd"
+      LOG_LEVEL: "info"
+      PRICE_NOTIFICATION_THRESHOLD: "1000"
+      PRICE_UPDATE_INTERVAL: "60m"
+      SLACK_WEBHOOK_URL: "https://hooks.slack.com/services/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"
+      START_BLOCK: "0"
+      SECRET_KEY: "test"
+
+  frontend:
+    image: gcr.io/unfederalreserve-dev/hardhat-network:latest
+    build: ../lending-ts.unfederalreserve.com
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: always
+        delay: 10s
+    ports:
+      - "80:8080"
+    networks:
+      - internal
+
+networks:
+  internal:

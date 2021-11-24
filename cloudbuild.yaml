@@ -23,7 +23,7 @@ steps:
   id: build-docker
   waitFor: ['init-env']
   args:
-    - --build-arg CONFIG=hardhat-mainnet.config.js
+    - --build-arg='CONFIG=hardhat-mainnet.config.js'
     - --destination=gcr.io/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA
     - --destination=gcr.io/$PROJECT_ID/$_SERVICE_NAME:latest
     - --cache=true
@@ -33,7 +33,7 @@ steps:
   id: build-docker-compose
   waitFor: ['init-env']
   args:
-    - --build-arg CONFIG=hardhat-empty.config.js
+    - --build-arg='CONFIG=hardhat-empty.config.js'
     - --destination=gcr.io/$PROJECT_ID/hardhat-network:latest
     - --cache=true
 
