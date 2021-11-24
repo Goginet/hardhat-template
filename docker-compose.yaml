@@ -27,6 +27,7 @@ services:
       PRIVATE_KEY: 21bfd4c5dfc54c8e68748d20ad35858cf99b18a8d57bb34b273646b21f0db0e8
       ETHEREUM_NODE: http://hardhat:8545
       NETWORK_ID: 1337
+      HARDHAT: true
     deploy:
       replicas: 1
       restart_policy:
