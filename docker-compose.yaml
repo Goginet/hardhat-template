@@ -3,7 +3,10 @@ version: "3.8"
 services:
   hardhat:
     image: gcr.io/unfederalreserve-dev/hardhat-network:latest
-    build: .
+    build:
+      context: .
+      args:
+        CONFIG: hardhat-empty.config.js
     ports:
       - "8545:8545"
     command: ["npx", "hardhat", "node"]
@@ -72,7 +75,7 @@ services:
         condition: always
         delay: 10s
     ports:
-      - "80:8080"
+      - "8080:80"
     networks:
       - internal
 
