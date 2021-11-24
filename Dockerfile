@@ -8,7 +8,7 @@ WORKDIR ${APP_ROOT}
 
 RUN yarn install
 
-ARG CONFIG hardhat-empty.config.js
+ARG CONFIG=hardhat-empty.config.js
 
 ADD ./run.sh /
 ADD .env ${APP_ROOT}/.env
