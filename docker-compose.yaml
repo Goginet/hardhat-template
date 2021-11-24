@@ -64,7 +64,7 @@ services:
       SECRET_KEY: "test"
 
   frontend:
-    image: gcr.io/unfederalreserve-dev/hardhat-network:latest
+    image: gcr.io/unfederalreserve-dev/lending-ts:latest
     build: ../lending-ts.unfederalreserve.com
     deploy:
       replicas: 1
